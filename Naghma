@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Links - ميوزك لينكس</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap');
+body{font-family:'Tajawal',sans-serif;background:#0d1117}
+.glass{background:rgba(22,27,34,0.8);backdrop-filter:blur(20px);border:1px solid #30363d}
+.card-hover:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,0.4)}
+.play-btn{opacity:0;transform:scale(0.8);transition:all 0.3s}
+.group:hover.play-btn{opacity:1;transform:scale(1)}
+</style>
+</head>
+<body class="text-white min-h-screen">
+<!-- Header -->
+<header class="sticky top-0 z-50 glass border-b border-[#30363d]">
+<div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center font-black text-xl">M</div>
+<h1 class="font-black text-xl">music-links</h1>
+<span class="text-xs bg-[#21262d] px-2 py-1 rounded-full text-gray-400">znvsv</span>
+</div>
+<button id="searchBtn" class="w-10 h-10 rounded-full bg-[#21262d] flex items-center justify-center"><i class="fas fa-search text-gray-400"></i></button>
+</div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 py-8">
+<!-- Hero -->
+<div class="relative overflow-hidden rounded-[32px] p-8 md:p-12 mb-10 bg-gradient-to-br from-violet-600 via-fuchsia-600 to-indigo-600">
+<div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.2),transparent)]"></div>
+<div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+<div>
+<h2 class="text-4xl md:text-6xl font-black leading-none mb-3">ميوزك هب<br><span class="text-white/60">الخاص بك</span></h2>
+<p class="text-white/80 max-w-md">كل روابط أغانيك في مكان واحد. تصميم سريع، داكن، وجاهز للنشر على GitHub Pages</p>
+<div class="flex gap-3 mt-6">
+<button onclick="playAll()" class="bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition"><i class="fas fa-play ml-2"></i> شغل الكل</button>
+<button class="glass px-6 py-3 rounded-full font-bold">مشاركة <i class="fas fa-share-nodes mr-2"></i></button>
+</div>
+</div>
+<div class="flex -space-x-4 rtl:space-x-reverse">
+<div class="w-20 h-20 rounded-2xl bg-white/20 rotate-3"></div>
+<div class="w-20 h-20 rounded-2xl bg-white/30 -rotate-3"></div>
+<div class="w-20 h-20 rounded-2xl bg-white/40 rotate-6"></div>
+</div>
+</div>
+</div>
+
+<!-- Categories -->
+<div class="flex gap-3 overflow-x-auto pb-2 mb-8 scrollbar-hide">
+<button class="px-6 py-2.5 rounded-full bg-white text-black font-bold whitespace-nowrap">الكل</button>
+<button class="px-6 py-2.5 rounded-full glass whitespace-nowrap">🔥 رائج</button>
+<button class="px-6 py-2.5 rounded-full glass whitespace-nowrap">✨ جديد</button>
+<button class="px-6 py-2.5 rounded-full glass whitespace-nowrap">🎧 بودكاست</button>
+<button class="px-6 py-2.5 rounded-full glass whitespace-nowrap">🎤 راب عراقي</button>
+</div>
+
+<!-- Music Grid -->
+<div id="musicGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"></div>
+</main>
+
+<!-- Player -->
+<div id="player" class="fixed bottom-0 left-0 right-0 glass border-t border-[#30363d] p-4 translate-y-full transition-transform duration-500">
+<div class="max-w-6xl mx-auto flex items-center gap-4">
+<img id="pCover" class="w-14 h-14 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500">
+<div class="flex-1 min-w-0">
+<h4 id="pTitle" class="font-bold truncate">اختر أغنية</h4>
+<p id="pArtist" class="text-sm text-gray-400 truncate">-</p>
+<div class="flex items-center gap-2 mt-1">
+<div class="flex-1 h-1 bg-[#30363d] rounded-full overflow-hidden cursor-pointer" id="progressWrap">
+<div id="progress" class="h-full bg-white w-0"></div>
+</div>
+<span id="time" class="text-[11px] text-gray-500">0:00</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button onclick="prev()" class="w-10 h-10 rounded-full bg-[#21262d]"><i class="fas fa-backward-step"></i></button>
+<button onclick="togglePlay()" id="playBtn" class="w-14 h-14 rounded-full bg-white text-black text-xl"><i class="fas fa-play"></i></button>
+<button onclick="next()" class="w-10 h-10 rounded-full bg-[#21262d]"><i class="fas fa-forward-step"></i></button>
+</div>
+<audio id="audio" preload="metadata"></audio>
+</div>
+</div>
+
+<script>
+const tracks = [
+{t:"ليالي بغداد",a:"znvsv",c:"from-violet-500 to-purple-600",link:"https://soundcloud.com",dur:"3:42"},
+{t:"Rap Al Anbar",a:"MC Iraqi",c:"from-fuchsia-500 to-pink-600",link:"https://spotify.com",dur:"2:58"},
+{t:"صوت الليل",a:"Luna",c:"from-blue-500 to-cyan-600",link:"https://youtube.com",dur:"4:12"},
+{t:"Desert Flow",a:"znvsv",c:"from-amber-500 to-orange-600",link:"https://anghami.com",dur:"3:05"},
+{t:"ذكريات",a:"Noor",c:"from-emerald-500 to-teal-600",link:"#",dur:"3:33"},
+{t:"Trap Ramadi",a:"DJ X",c:"from-red-500 to-rose-600",link:"#",dur:"2:44"},
+{t:"هدوء",a:"znvsv",c:"from-indigo-500 to-violet-600",link:"#",dur:"5:01"},
+{t:"Midnight in Iraq",a:"Beats",c:"from-slate-600 to-slate-800",link:"#",dur:"3:19"},
+];
+const grid=document.getElementById('musicGrid');
+tracks.forEach((t,i)=>{
+grid.innerHTML+=`
+<div class="group glass rounded-[24px] p-3 card-hover transition-all cursor-pointer" onclick="playTrack(${i})">
+<div class="relative aspect-square rounded-[18px] bg-gradient-to-br ${t.c} p-4 flex flex-col justify-between overflow-hidden">
+<div class="flex justify-between items-start">
+<span class="text-[10px] bg-black/30 backdrop-blur px-2 py-1 rounded-full">${t.dur}</span>
+<i class="fas fa-music opacity-30 text-2xl"></i>
+</div>
+<button class="play-btn absolute bottom-3 left-3 w-12 h-12 rounded-full bg-white text-black flex items-center justify-center shadow-xl"><i class="fas fa-play ml-0.5"></i></button>
+<div class="text-5xl font-black opacity-20 leading-none">${i+1}</div>
+</div>
+<div class="p-2 pt-3">
+<h3 class="font-bold truncate">${t.t}</h3>
+<p class="text-sm text-gray-400 truncate">${t.a}</p>
+<div class="flex gap-2 mt-2">
+<a href="${t.link}" target="_blank" class="text-[11px] bg-[#21262d] px-2 py-1 rounded-full"><i class="fab fa-spotify"></i></a>
+<a href="${t.link}" target="_blank" class="text-[11px] bg-[#21262d] px-2 py-1 rounded-full"><i class="fab fa
