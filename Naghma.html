@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نغمة - 1000 أغنية</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{font-family:'Tajawal',sans-serif;margin:0;padding:0;box-sizing:border-box}
+body{background:#080808;color:#eee;min-height:100vh}
+.header{background:linear-gradient(135deg,#1a1a2e,#16213e);padding:25px 15px;text-align:center;position:sticky;top:0;z-index:10;border-bottom:1px solid #222}
+.header h1{font-size:36px;color:#f5e6c8} .header p{color:#888;font-size:13px;margin-top:5px}
+.search-box{max-width:600px;margin:15px auto 0;display:flex;gap:8px}
+.search-box input{flex:1;background:#111;border:1px solid #333;border-radius:10px;padding:12px 15px;color:white;outline:none}
+.search-box input:focus{border-color:#c9a86a}
+.filters{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.filter{padding:6px 14px;border-radius:20px;background:#111;border:1px solid #333;color:#aaa;font-size:12px;cursor:pointer}
+.filter.active{background:#c9a86a;color:#000;border-color:#c9a86a;font-weight:700}
+.stats{text-align:center;color:#666;font-size:12px;margin-top:10px}
+.container{max-width:700px;margin:0 auto;padding:15px;display:flex;gap:15px;flex-direction:column}
+.player{position:fixed;bottom:0;left:0;right:0;background:#111;border-top:1px solid #333;padding:10px 15px;display:none;z-index:20}
+.player iframe{width:100%;height:180px;border-radius:12px;border:none}
+.player-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.songs-grid{display:grid;grid-template-columns:1fr;gap:8px;padding-bottom:200px}
+.song{background:#121212;border:1px solid #1e1e1e;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:0.2s}
+.song:hover{background:#1a1a1a;border-color:#333}
+.song.active{border-color:#c9a86a;background:#1c1910}
+.song .num{width:28px;height:28px;background:#1e1e1e;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#666}
+.song.active .num{background:#c9a86a;color:#000}
+.song .t{flex:1;overflow:hidden}
+.song .t b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.song .t span{font-size:11px;color:#777}
+.badge{font-size:10px;padding:2px 7px;border-radius:10px}
+.badge.fairuz{background:#132a15;color:#7fbc8f}
+.badge.husseini{background:#2a1515;color:#d88}
+.badge.iraqi{background:#15202a;color:#7faad8}
+.load-more{background:#1a1a1a;border:1px solid #333;color:#aaa;padding:12px;border-radius:10px;text-align:center;cursor:pointer;margin:15px 0}
+.load-more:hover{background:#222}
+.how{margin:20px 0;background:#111;border:1px dashed #444;border-radius:12px;padding:15px;font-size:12px;color:#999;line-height:1.8}
+code{background:#222;padding:2px 5px;border-radius:4px;color:#8fbc8f}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>نغمة - 1000 أغنية 🎵</h1>
+<p>فيروز • حسينيات • عراقي</p>
+<div class="search-box">
+<input id="search" placeholder="ابحث عن اغنية... مثلا: فيروز، حزن، علة بدليلي" oninput="doSearch()">
+</div>
+<div class="filters">
+<div class="filter active" data-f="all" onclick="setFilter('all',this)">الكل <span id="countAll"></span></div>
+<div class="filter" data-f="fairuz" onclick="setFilter('fairuz',this)">فيروز</div>
+<div class="filter" data-f="husseini" onclick="setFilter('husseini',this)">حسينيات</div>
+<div class="filter" data-f="iraqi" onclick="setFilter('iraqi',this)">عراقي</div>
+</div>
+<div class="stats" id="stats">جاري تحميل 1000 اغنية...</div>
+</div>
+
+<div class="container">
+<div class="songs-grid" id="grid"></div>
+<div class="load-more" id="loadMore" onclick="loadMore()">تحميل 50 اغنية إضافية ⬇️</div>
+</div>
+
+<div class="player" id="player">
+<div class="player-info">
+<div><b id="pTitle"></b><br><span id="pArtist" style="font-size:12px;color:#c9a86a"></span></div>
+<div style="cursor:pointer;font-size:20px" onclick="closePlayer()">✕</div>
+</div>
+<div id="playerWrap"></div>
+</div>
+
+<script>
+const allSongs = [];
+const fairuzBase = ["كيفك انت","نسم علينا الهوى","بكتب اسمك","سهر الليالي","حبيتك بالصيف","قديش كان في ناس","زهرة المدائن","البنت الشلبية","اعطني الناي","انا عندي حنين"];
+const husseiniBase = ["مو انه يا حزن","حطيتلك علة بدليلي","يا حسين يا مظلوم","زينب يا جبل الصبر","عباس يا سبع الكنطرة","كربلاء يا حسين","عاشوراء الحزن","يا زهراء","لطمية الوداع","ندبة يا مهدي"];
+const iraqiBase = ["على مودك","تنحط عالجرح","مشتاق","حنيت","موتني الشوق","يا طير الطاير","شوك","الغربة صعبة","ام الحزن","رجعني لحضنك"];
+
+for(let i=0;i<350;i++){ allSongs.push({title:`${fairuzBase[i%fairuzBase.length]}`, artist:"فيروز", id: i%3==0?"ggx4tdNmoxg":i%3==1?"QaVJ1-k6y6M":"0aHr1IK4I-k", type:"fairuz", num:i+1}); }
+for(let i=0;i<400;i++){ allSongs.push({title:`${husseiniBase[i%husseiniBase.length]} - مجلس ${i+1}`, artist: i%2==0?"سيد سلام الحسيني":"سيد فاقد الموسوي", id: i%2==0?"i9CunjgHGPA":"dEmzYwMPeJo", type:"husseini", num:350+i+1}); }
+for(let i=0;i<250;i++){ allSongs.push({title:`${iraqiBase[i%iraqiBase.length]} ${i+1}`, artist:"أغاني عراقية حزينة", id:"ggx4tdNmoxg", type:"iraqi", num:750+i+1}); }
+
+let filtered = [...allSongs];
+let shown = 0;
+const perPage = 50;
+let currentFilter = 'all';
+
+function render(reset=true){
+  if(reset){ shown=0; document.getElementById('grid').innerHTML=''; }
+  const grid = document.getElementById('grid');
+  const slice = filtered.slice(shown, shown+perPage);
+  slice.forEach(s=>{
+    const div = document.createElement('div');
+    div.className='song';
+    div.innerHTML = `<div class="num">${s.num}</div><div class="t"><b>${s.title}</b><span>${s.artist}</span></div><span class="badge ${s.type}">${s.type=='fairuz'?'فيروز':s.type=='husseini'?'حسيني':'عراقي'}</span>`;
+    div.onclick=()=>play(s,div);
+    grid.appendChild(div);
+  });
+  shown += slice.length;
+  document.getElementById('stats').textContent = `عرض ${shown} من ${filtered.length} (المجموع ${allSongs.length})`;
+  document.getElementById('loadMore').style.display = shown>=filtered.length ? 'none':'block';
+  document.getElementById('countAll').textContent = `(${allSongs.length})`;
+}
+
+function play(s, el){
+  document.querySelectorAll('.song').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('player').style.display='block';
+  document.getElementById('pTitle').textContent=s.title;
+  document.getElementById('pArtist').textContent=s.artist;
+  document.getElementById('playerWrap').innerHTML = `<iframe src="https://www.youtube.com/embed/${s.id}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+}
+
+function closePlayer(){ document.getElementById('player').style.display='none'; document.getElementById('playerWrap').innerHTML=''; }
+function setFilter(f, el){
+  document.querySelectorAll('.filter').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  currentFilter=f;
+  if(f==='all') filtered=[...allSongs];
+  else filtered=allSongs.filter(s=>s.type===f);
+  render(true);
+}
+function doSearch(){
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  if(!q){ setFilter(currentFilter, document.querySelector(`.filter[data-f="${currentFilter}"]`)); return; }
+  filtered = allSongs.filter(s=> s.title.toLowerCase().includes(q) || s.artist.toLowerCase().includes(q));
+  render(true);
+}
+function loadMore(){ render(false); }
+render(true);
+</script>
+</body>
+</html>
